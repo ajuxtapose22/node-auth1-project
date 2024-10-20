@@ -5,6 +5,11 @@ const cors = require("cors");
 const usersRouter = require('./users/users-router')
 const authRouter = require('./auth/auth-router')
 
+// SESSIONS CONFIGURATION -DONT FORGET TO INSTALL => npm i connect-session-knex
+const session = require('express-session')
+const Store = require('connect-session-knex')(session)
+const knex = require('../data/db-config')
+
 /**
   Do what needs to be done to support sessions with the `express-session` package!
   To respect users' privacy, do NOT send them a cookie unless they log in.
@@ -19,6 +24,27 @@ const authRouter = require('./auth/auth-router')
  */
 
 const server = express();
+
+// sessions configuration
+server.user(session({
+  name: 'chocolatechip',
+  secret: 'shh',
+  saveUninitaialized: false,
+  resave: false,
+  store: new Store({
+    knex,
+    createTable: true,
+    clearInterval: 1000 * 60 * 10,
+    tableName: 'sessions',
+    sidfieldname: 'sid',
+  }),
+  cookieL {
+    maxAge: 1000 * 60 * 10,
+    secure: false, // for production this should be true (using https)
+    httpOnly: true,
+    // sameSite: 'none', --this would also be for production
+  }
+}))
 
 server.use(helmet());
 server.use(express.json());
