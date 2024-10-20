@@ -7,8 +7,14 @@ const authRouter = require('./auth/auth-router')
 
 // SESSIONS CONFIGURATION -DONT FORGET TO INSTALL => npm i connect-session-knex
 const session = require('express-session')
-const Store = require('connect-session-knex')(session)
-const knex = require('../data/db-config')
+try {
+  const Store = require('connect-session-knex')(session);
+  console.log("connect-session-knex loaded successfully");
+} catch (error) {
+  console.error("Error loading connect-session-knex:", error);
+}
+
+// const knex = require('../data/db-config')
 
 /**
   Do what needs to be done to support sessions with the `express-session` package!
@@ -26,25 +32,29 @@ const knex = require('../data/db-config')
 const server = express();
 
 // sessions configuration
-server.user(session({
-  name: 'chocolatechip',
-  secret: 'shh',
-  saveUninitaialized: false,
-  resave: false,
-  store: new Store({
-    knex,
-    createTable: true,
-    clearInterval: 1000 * 60 * 10,
-    tableName: 'sessions',
-    sidfieldname: 'sid',
-  }),
-  cookieL {
-    maxAge: 1000 * 60 * 10,
-    secure: false, // for production this should be true (using https)
-    httpOnly: true,
-    // sameSite: 'none', --this would also be for production
-  }
-}))
+try {
+  server.use(session({
+    name: 'chocolatechip',
+    secret: 'shh',
+    saveUninitialized: false,
+    resave: false,
+    store: new Store({
+      knex,
+      createTable: true,
+      clearInterval: 1000 * 60 * 10,
+      tableName: 'sessions',
+      sidfieldname: 'sid',
+    }),
+    cookie: {
+      maxAge: 1000 * 60 * 10,
+      secure: false,
+      httpOnly: true,
+    }
+  }));
+} catch (error) {
+  console.error('Error with session configuration:', error);
+}
+
 
 server.use(helmet());
 server.use(express.json());
